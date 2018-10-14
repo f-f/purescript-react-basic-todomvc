@@ -1,0 +1,77 @@
+module Footer where
+
+import Prelude
+
+import Data.Array as Array
+import Effect (Effect)
+import React.Basic (JSX)
+import React.Basic as React
+import React.Basic.DOM as DOM
+import React.Basic.Events as Events
+import Task (Task)
+import Utils (classy)
+import Data.Generic.Rep (class Generic)
+import Data.Generic.Rep.Show (genericShow)
+
+data Visibility
+  = All
+  | Completed
+  | Active
+
+derive instance eqVisibility :: Eq Visibility
+derive instance genericVisibility :: Generic Visibility _
+instance showVisibility :: Show Visibility where
+  show = genericShow
+
+type Props =
+  { tasks            :: Array Task
+  , onClearCompleted :: Effect Unit
+  , visibility       :: Visibility
+  }
+
+component :: React.Component Props
+component = React.stateless { displayName: "Footer", render }
+
+render :: Props -> JSX
+render props =
+  let
+    tasksCompleted = Array.length (Array.filter _.completed props.tasks)
+
+    tasksLeft = Array.length props.tasks - tasksCompleted
+
+    pluralizedItem = if tasksLeft == 1 then " item" else " items"
+  in
+    DOM.footer
+      { className: "footer"
+      , hidden: Array.null props.tasks
+      , children:
+          [ classy DOM.span "todo-count"
+              [ DOM.strong_ [ DOM.text (show tasksLeft) ]
+              , DOM.text (pluralizedItem <> " left")
+              ]
+          , classy DOM.ul "filters"
+              [ changeVisibilityLink "#/" All props.visibility
+              , DOM.text " "
+              , changeVisibilityLink "#/active" Active props.visibility
+              , DOM.text " "
+              , changeVisibilityLink "#/completed" Completed props.visibility
+              ]
+          , DOM.button
+              { className: "clear-completed"
+              , hidden: tasksCompleted == 0
+              , onClick: Events.handler_ props.onClearCompleted
+              , children: [ DOM.text "Clear completed" ]
+              }
+          ]
+      }
+
+changeVisibilityLink :: String -> Visibility -> Visibility -> JSX
+changeVisibilityLink uri visibility actualVisibility =
+  DOM.li_
+    -- TODO: maybe here we need an onClick?
+    [ DOM.a
+        { className: if visibility == actualVisibility then "selected" else ""
+        , href: uri
+        , children: [ DOM.text (show visibility) ]
+        }
+    ]
