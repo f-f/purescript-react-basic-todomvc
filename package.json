@@ -1,0 +1,27 @@
+{
+  "name": "purescript-react-basic-todomvc",
+  "version": "1.0.0",
+  "description": "TodoMVC with purescript-react-basic",
+  "main": "index.js",
+  "repository": "https://github.com/f-f/purescript-react-basic-todomvc",
+  "author": "Fabrizio Ferrai <fabrizio.ferrai@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "create-react-class": "^15.6.3",
+    "parcel-bundler": "^1.10.2",
+    "psc-package-bin-simple": "^1.0.4",
+    "purescript": "^0.12.0",
+    "react": "^16.5.2",
+    "react-dom": "^16.5.2",
+    "todomvc-app-css": "^2.1.2",
+    "todomvc-common": "^1.0.5"
+  },
+  "scripts": {
+    "start": "parcel index.html",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "install": "psc-package install",
+    "build-production": "psc-package build && parcel build index.html",
+    "build": "psc-package build",
+    "clean": "rm -rf .cache .psc-package .psci_modules node_modules output dist"
+  }
+}

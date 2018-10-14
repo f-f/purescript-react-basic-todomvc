@@ -1,0 +1,5 @@
+node_modules/*
+.cache/*
+.psc-package/*
+output/*
+dist/*

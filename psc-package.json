@@ -1,0 +1,14 @@
+{
+  "name": "purescript-react-basic-todomvc",
+  "set": "react-basic-patch",
+  "source": "https://github.com/KSF-Media/package-sets.git",
+  "depends": [
+    "generics-rep",
+    "effect",
+    "console",
+    "psci-support",
+    "react-basic",
+    "prelude",
+    "strings"
+  ]
+}
