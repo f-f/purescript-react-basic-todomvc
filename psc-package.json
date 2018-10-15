@@ -3,6 +3,9 @@
   "set": "react-basic-patch",
   "source": "https://github.com/KSF-Media/package-sets.git",
   "depends": [
+    "foreign-generic",
+    "foreign",
+    "simple-json",
     "generics-rep",
     "effect",
     "console",

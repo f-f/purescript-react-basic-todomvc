@@ -6,9 +6,10 @@ import Data.Array as Array
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.String as String
 import Effect (Effect)
-import Effect.Uncurried (EffectFn1)
 import Footer (Visibility(..))
 import Footer as Footer
+import LocalStorage as LocalStorage
+import Effect.Class.Console as Console
 import React.Basic (JSX)
 import React.Basic as React
 import React.Basic.DOM as DOM
@@ -41,6 +42,9 @@ initialState =
   , uid: 0
   }
 
+localStorageKey :: String
+localStorageKey = "todomvc-purescript-state"
+
 app :: React.Component Props
 app = React.component
   { displayName: "App"
@@ -49,7 +53,12 @@ app = React.component
   , render
   }
   where
-    receiveProps = \_ -> pure unit
+    receiveProps { state, setState, isFirstMount } = when isFirstMount do
+      persisted <- LocalStorage.getItem localStorageKey
+      Console.logShow persisted
+      setState \_ -> case persisted of
+        Nothing       -> state
+        Just oldState -> oldState
 
 render :: forall r. { state :: State, setState :: SetState | r } -> JSX
 render { state, setState } =
@@ -81,6 +90,7 @@ render { state, setState } =
                        , tasks = Array.cons newTodo state.tasks
                        , uid = state.uid + 1
                        }
+            persistState state
           otherwise -> pure unit
             where
               newDescription = String.trim state.newTodo
@@ -188,5 +198,5 @@ taskList tasks visibility onCheck onDelete onEdit onCommit checkAllTasks =
           , onCommit: onCommit task.id
           }
 
-noopHandler :: EffectFn1 Events.SyntheticEvent Unit
-noopHandler = Events.handler_ $ pure unit
+persistState :: State -> Effect Unit
+persistState state = LocalStorage.setItem localStorageKey state
