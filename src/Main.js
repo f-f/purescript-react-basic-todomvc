@@ -1,13 +1,9 @@
 "use strict";
 
-var locationHashChanged = function () {
-  if (location.hash === "#foo") {
-    console.log("foo");
-  } else {
-    console.log("bar");
-  }
-};
-
-exports.startNavigation = function() {
-  window.onhashchange = locationHashChanged;
+exports.startNavigation = function(navFn) {
+  window.onhashchange = function () {
+    // We double call here because navFn returns an effect
+    // (which is just a wrapper function, so we unwrap)
+    navFn(location.hash)();
+  };
 };

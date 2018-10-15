@@ -6,10 +6,10 @@ import Data.Array as Array
 import Data.Maybe (Maybe(..), fromMaybe)
 import Data.String as String
 import Effect (Effect)
+import Effect.Uncurried (EffectFn1, runEffectFn1)
 import Footer (Visibility(..))
 import Footer as Footer
 import LocalStorage as LocalStorage
-import Effect.Class.Console as Console
 import React.Basic (JSX)
 import React.Basic as React
 import React.Basic.DOM as DOM
@@ -19,7 +19,7 @@ import Task (Task)
 import Task as Task
 import Utils (classy)
 
-foreign import startNavigation :: Effect Unit
+foreign import startNavigation :: EffectFn1 (String -> Effect Unit) Unit
 
 
 type Props = {}
@@ -54,8 +54,17 @@ app = React.component
   }
   where
     receiveProps { state, setState, isFirstMount } = when isFirstMount do
+      -- On first mount, we start the navigation
+      let matchRoutes hash = case hash of
+            "#/"          -> setState _ { visibility = All }
+            "#/active"    -> setState _ { visibility = Active }
+            "#/completed" -> setState _ { visibility = Completed }
+            otherwise     -> pure unit
+      runEffectFn1 startNavigation matchRoutes
+
+      -- Then we try to read if we had some state persisted in LocalStorage
+      -- If yes, we overwrite the state with it
       persisted <- LocalStorage.getItem localStorageKey
-      Console.logShow persisted
       setState \_ -> case persisted of
         Nothing       -> state
         Just oldState -> oldState
