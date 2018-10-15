@@ -56,7 +56,7 @@ render { state, setState } =
   classy DOM.div "todomvc-wrapper"
     [ classy DOM.section "todoapp"
       [ taskEntry state.newTodo onEditNewTodo onSubmitNewTodo
-      , taskList state.tasks state.visibility onTaskCheck onTaskDelete checkAllTasks (\_ -> pure unit)
+      , taskList state.tasks state.visibility onTaskCheck onTaskDelete onTaskEdit onTaskUpdate checkAllTasks
       , React.element
           Footer.component
             { tasks: state.tasks
@@ -92,8 +92,28 @@ render { state, setState } =
                 , edits: Nothing
                 }
 
-    onTaskCheck = pure unit
-    onTaskDelete = pure unit
+    onTaskCheck id =
+      setState _ { tasks = map negateCheck state.tasks }
+      where
+        negateCheck task =
+          if task.id == id then task { completed = not task.completed } else task
+
+    onTaskUpdate id newDescription =
+      setState _ { tasks = map updateTask state.tasks }
+      where
+        updateTask task =
+          if task.id == id
+          then task { description = newDescription, edits = Nothing }
+          else task
+
+    onTaskEdit id newEdits =
+      setState _ { tasks = map editTask state.tasks }
+      where
+        editTask task =
+          if task.id == id then task { edits = newEdits } else task
+
+    onTaskDelete task =
+      setState _ { tasks = Array.deleteBy (\a b -> a.id == b.id) task state.tasks }
 
     checkAllTasks =
       Events.handler
@@ -127,12 +147,13 @@ taskEntry value onEdit onSubmit =
 taskList
   :: Array Task
   -> Visibility
-  -> Effect Unit
-  -> Effect Unit
+  -> (Int -> Effect Unit)
+  -> (Task -> Effect Unit)
+  -> (Int -> (Maybe String) -> Effect Unit)
+  -> (Int -> String -> Effect Unit)
   -> Events.EventHandler
-  -> (String -> Effect Unit)
   -> JSX
-taskList tasks visibility onCheck onDelete checkAllTasks onCommit =
+taskList tasks visibility onCheck onDelete onEdit onCommit checkAllTasks =
   DOM.section
     { className: "main"
     , style: DOM.css { visibility: if Array.null tasks then "hidden" else "visible" }
@@ -161,9 +182,10 @@ taskList tasks visibility onCheck onDelete checkAllTasks onCommit =
       React.element
         Task.component
           { task: task
-          , onCheck
-          , onDelete
-          , onCommit
+          , onCheck: onCheck task.id
+          , onDelete: onDelete task
+          , onEdit: onEdit task.id
+          , onCommit: onCommit task.id
           }
 
 noopHandler :: EffectFn1 Events.SyntheticEvent Unit
