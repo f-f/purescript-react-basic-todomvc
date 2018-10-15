@@ -31,7 +31,12 @@ type State =
   , visibility :: Visibility
   }
 
-type SetState = (State -> State) -> Effect Unit
+
+-- | SetStateThen uses an update function to modify the current state and a
+-- | callback to invoke once the resulting rerender has been completely applied.
+type SetStateThen = (State -> State) -> (State -> Effect Unit) -> Effect Unit
+
+--setPersistentState setState stateFn = do
 
 
 initialState :: State
@@ -53,7 +58,9 @@ app = React.component
   , render
   }
   where
-    receiveProps { state, setState, isFirstMount } = when isFirstMount do
+    receiveProps { state, setStateThen, isFirstMount } = when isFirstMount do
+      let setState = (flip setStateThen) saveState
+
       -- On first mount, we start the navigation
       let matchRoutes hash = case hash of
             "#/"          -> setState _ { visibility = All }
@@ -69,8 +76,8 @@ app = React.component
         Nothing       -> state
         Just oldState -> oldState
 
-render :: forall r. { state :: State, setState :: SetState | r } -> JSX
-render { state, setState } =
+render :: forall r. { state :: State, setStateThen :: SetStateThen | r } -> JSX
+render { state, setStateThen } =
   classy DOM.div "todomvc-wrapper"
     [ classy DOM.section "todoapp"
       [ taskEntry state.newTodo onEditNewTodo onSubmitNewTodo
@@ -99,7 +106,6 @@ render { state, setState } =
                        , tasks = Array.cons newTodo state.tasks
                        , uid = state.uid + 1
                        }
-            persistState state
           otherwise -> pure unit
             where
               newDescription = String.trim state.newTodo
@@ -144,6 +150,8 @@ render { state, setState } =
             setState _ { tasks = (map toggle state.tasks) }
 
     clearCompleted = setState _ { tasks = Array.filter (not <<< _.completed) state.tasks }
+
+    setState = (flip setStateThen) saveState
 
 
 taskEntry :: String -> Events.EventHandler -> Events.EventHandler -> JSX
@@ -207,5 +215,5 @@ taskList tasks visibility onCheck onDelete onEdit onCommit checkAllTasks =
           , onCommit: onCommit task.id
           }
 
-persistState :: State -> Effect Unit
-persistState state = LocalStorage.setItem localStorageKey state
+saveState :: State -> Effect Unit
+saveState state = LocalStorage.setItem localStorageKey state
