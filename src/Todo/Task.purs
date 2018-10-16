@@ -18,10 +18,9 @@ type Task =
   { description :: String
   , id          :: Int
   , completed   :: Boolean
-  , edits       :: Maybe String
   }
 
-type State = Task
+type State = { edits :: Maybe String }
 
 type Props =
   { key      :: Int
@@ -34,7 +33,7 @@ type Props =
 type SetState = (State -> State) -> Effect Unit
 
 initialState :: State
-initialState = { description: "", id: 0, completed: false, edits: Nothing }
+initialState = { edits: Nothing }
 
 component :: React.Component Props
 component = React.component
@@ -44,9 +43,7 @@ component = React.component
     , receiveProps
     }
     where
-      receiveProps { props, state, setState, isFirstMount } =
-        when isFirstMount do
-          setState (\_ -> props.task)
+      receiveProps _ = pure unit
 
 render :: forall r. { state :: State, setState :: SetState, props :: Props | r } -> JSX
 render { state, setState, props } =
@@ -56,11 +53,11 @@ render { state, setState, props } =
                  Just _ -> "editing"
                  Nothing -> ""
 
-    description = fromMaybe state.description state.edits
+    description = fromMaybe props.task.description state.edits
 
-    elementId = "todo-" <> show state.id
+    elementId = "todo-" <> show props.task.id
 
-    onFocus = setState _ { edits = Just state.description }
+    onFocus = setState _ { edits = Just props.task.description }
 
     onChange =
       Events.handler
@@ -81,7 +78,7 @@ render { state, setState, props } =
 
     commit = case not (String.null newDescription) of
       true  -> do
-        setState _ { description = newDescription, edits = Nothing }
+        setState _ { edits = Nothing }
         props.onCommit newDescription
       false -> pure unit
       where
@@ -95,7 +92,7 @@ render { state, setState, props } =
               [ DOM.input
                   { className: "toggle"
                   , "type": "checkbox"
-                  , checked: state.completed
+                  , checked: props.task.completed
                   , onChange: Events.handler_ props.onCheck
                   }
               , DOM.label
