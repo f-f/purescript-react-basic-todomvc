@@ -81,7 +81,7 @@ render { state, setStateThen } =
   classy DOM.div "todomvc-wrapper"
     [ classy DOM.section "todoapp"
       [ taskEntry state.newTodo onEditNewTodo onSubmitNewTodo
-      , taskList state.tasks state.visibility onTaskCheck onTaskDelete onTaskEdit onTaskUpdate checkAllTasks
+      , taskList state.tasks state.visibility onTaskCheck onTaskDelete onTaskUpdate checkAllTasks
       , React.element
           Footer.component
             { tasks: state.tasks
@@ -128,14 +128,8 @@ render { state, setStateThen } =
       where
         updateTask task =
           if task.id == id
-          then task { description = newDescription, edits = Nothing }
+          then task { description = newDescription }
           else task
-
-    onTaskEdit id newEdits =
-      setState _ { tasks = map editTask state.tasks }
-      where
-        editTask task =
-          if task.id == id then task { edits = newEdits } else task
 
     onTaskDelete task =
       setState _ { tasks = Array.deleteBy (\a b -> a.id == b.id) task state.tasks }
@@ -176,11 +170,10 @@ taskList
   -> Visibility
   -> (Int -> Effect Unit)
   -> (Task -> Effect Unit)
-  -> (Int -> (Maybe String) -> Effect Unit)
   -> (Int -> String -> Effect Unit)
   -> Events.EventHandler
   -> JSX
-taskList tasks visibility onCheck onDelete onEdit onCommit checkAllTasks =
+taskList tasks visibility onCheck onDelete onCommit checkAllTasks =
   DOM.section
     { className: "main"
     , style: DOM.css { visibility: if Array.null tasks then "hidden" else "visible" }
@@ -208,10 +201,10 @@ taskList tasks visibility onCheck onDelete onEdit onCommit checkAllTasks =
     taskView task =
       React.element
         Task.component
-          { task: task
+          { key: task.id
+          , task: task
           , onCheck: onCheck task.id
           , onDelete: onDelete task
-          , onEdit: onEdit task.id
           , onCommit: onCommit task.id
           }
 

@@ -24,10 +24,10 @@ type Task =
 type State = Task
 
 type Props =
-  { task     :: Task
+  { key      :: Int
+  , task     :: Task
   , onCheck  :: Effect Unit
   , onDelete :: Effect Unit
-  , onEdit   :: Maybe String -> Effect Unit
   , onCommit :: String -> Effect Unit
   }
 
@@ -44,16 +44,15 @@ component = React.component
     , receiveProps
     }
     where
-      receiveProps { props, state, setState, isFirstMount } = do
-        --when isFirstMount do
-        --  Log.log "First mount!"
-        setState (\_ -> props.task)
+      receiveProps { props, state, setState, isFirstMount } =
+        when isFirstMount do
+          setState (\_ -> props.task)
 
 render :: forall r. { state :: State, setState :: SetState, props :: Props | r } -> JSX
 render { state, setState, props } =
   let
     classNames = (if props.task.completed then "completed " else "")
-               <> case props.task.edits of
+               <> case state.edits of
                  Just _ -> "editing"
                  Nothing -> ""
 
@@ -61,12 +60,12 @@ render { state, setState, props } =
 
     elementId = "todo-" <> show state.id
 
-    onFocus = props.onEdit (Just description)
+    onFocus = setState _ { edits = Just state.description }
 
     onChange =
       Events.handler
         (Events.merge { targetValue })
-        \{ targetValue } -> props.onEdit targetValue
+        \{ targetValue } -> setState _ { edits = targetValue }
 
     onBlur = Events.handler_ do
       Console.log ""
@@ -76,20 +75,21 @@ render { state, setState, props } =
       Events.handler
         (Events.merge { targetValue, key })
         \{ targetValue, key } -> case key of
-          Just "Escape" -> props.onEdit Nothing
+          Just "Escape" -> setState _ { edits = Nothing }
           Just "Enter"  -> commit
           otherwise     -> pure unit
 
     commit = case not (String.null newDescription) of
-      true  -> props.onCommit newDescription
+      true  -> do
+        setState _ { description = newDescription, edits = Nothing }
+        props.onCommit newDescription
       false -> pure unit
       where
-        newDescription = String.trim $ fromMaybe "" props.task.edits
+        newDescription = String.trim $ fromMaybe "" state.edits
 
   in
     DOM.li
       { className: classNames
-      , key: show props.task.id
       , children:
           [ classy DOM.div "view"
               [ DOM.input
