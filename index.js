@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 
 import createReactClass from 'create-react-class';
 React.createClass = createReactClass;
-var Main = require('./output/Main');
+var Main = require('./output/Todo.Main');
 
 function main() {
   const myComponent = (

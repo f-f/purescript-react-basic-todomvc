@@ -1,4 +1,4 @@
-module Task where
+module Todo.Task where
 
 import Prelude
 
@@ -11,7 +11,7 @@ import React.Basic as React
 import React.Basic.DOM as DOM
 import React.Basic.DOM.Events (key, targetValue)
 import React.Basic.Events as Events
-import Utils (classy)
+import Todo.View (classy)
 
 
 type Task =

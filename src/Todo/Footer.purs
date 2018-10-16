@@ -1,4 +1,4 @@
-module Footer where
+module Todo.Footer where
 
 import Prelude
 
@@ -13,8 +13,8 @@ import React.Basic.Events as Events
 import Simple.JSON (class ReadForeign, class WriteForeign)
 import Foreign.Generic.EnumEncoding (genericDecodeEnum, genericEncodeEnum)
 import Data.String (toLower)
-import Task (Task)
-import Utils (classy)
+import Todo.Task (Task)
+import Todo.View (classy)
 
 data Visibility
   = All

@@ -1,4 +1,4 @@
-module Main where
+module Todo.Main where
 
 import Prelude
 
@@ -7,17 +7,17 @@ import Data.Maybe (Maybe(..), fromMaybe)
 import Data.String as String
 import Effect (Effect)
 import Effect.Uncurried (EffectFn1, runEffectFn1)
-import Footer (Visibility(..))
-import Footer as Footer
 import LocalStorage as LocalStorage
 import React.Basic (JSX)
 import React.Basic as React
 import React.Basic.DOM as DOM
 import React.Basic.DOM.Events (key, preventDefault, targetChecked, targetValue)
 import React.Basic.Events as Events
-import Task (Task)
-import Task as Task
-import Utils (classy)
+import Todo.Footer (Visibility(..))
+import Todo.Footer as Footer
+import Todo.Task (Task)
+import Todo.Task as Task
+import Todo.View (classy)
 
 foreign import startNavigation :: EffectFn1 (String -> Effect Unit) Unit
 

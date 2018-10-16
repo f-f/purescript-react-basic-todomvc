@@ -1,4 +1,4 @@
-module Utils where
+module Todo.View where
 
 import React.Basic (JSX)
 
