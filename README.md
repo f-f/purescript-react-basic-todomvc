@@ -13,7 +13,7 @@ An implementation of [TodoMVC](http://todomvc.com/) in [PureScript](http://www.p
   The only state we need to keep in it is the current edits for a focused `Task`.
 - Some things are achieved with a thin layer of JS FFI: [LocalStorage](https://github.com/f-f/purescript-react-basic-todomvc/blob/master/src/LocalStorage.js) and [routing](https://github.com/f-f/purescript-react-basic-todomvc/blob/master/src/Todo/Main.js)
 
-# Development
+## Development
 
 ```bash
 ## Install npm dependencies, PureScript compiler, etc
