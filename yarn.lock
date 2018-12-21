@@ -4370,11 +4370,6 @@ proto-list@~1.2.1:
   resolved "https://registry.yarnpkg.com/proto-list/-/proto-list-1.2.4.tgz#212d5bfe1318306a420f6402b8e26ff39647a849"
   integrity sha1-IS1b/hMYMGpCD2QCuOJv85ZHqEk=
 
-psc-package-bin-simple@^1.0.4:
-  version "1.0.4"
-  resolved "https://registry.yarnpkg.com/psc-package-bin-simple/-/psc-package-bin-simple-1.0.4.tgz#11bf64763c3faa8bc2b789eb91eeecd04d9a41b9"
-  integrity sha512-UOJmB8Z8pTdGskW/CfrqKniusim43WcrN3u5/pERj1FBNQX/+FN95bs2qQedath0CEWNEzblF4LKTFbFhE1Idg==
-
 pseudomap@^1.0.2:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/pseudomap/-/pseudomap-1.0.2.tgz#f052a28da70e618917ef0a8ac34c1ae5a68286b3"
@@ -4418,10 +4413,15 @@ punycode@^1.2.4:
   resolved "https://registry.yarnpkg.com/punycode/-/punycode-1.4.1.tgz#c0d5a63b2718800ad8e1eb0fa5269c84dd41845e"
   integrity sha1-wNWmOycYgArY4esPpSachN1BhF4=
 
-purescript@^0.12.0:
-  version "0.12.0"
-  resolved "https://registry.yarnpkg.com/purescript/-/purescript-0.12.0.tgz#45331c61c586f09dcae20bb5242705831ef0ec20"
-  integrity sha512-q9kYKqjcukY3/4xdu3wk13Qs6po3NQR1QLGTmyVgqjKpz8l7coZCAx5Ajpi3u2Qla7eXurgD3mWFo0iMOUzUUA==
+purescript-spago@^0.6.0:
+  version "0.6.0"
+  resolved "https://registry.yarnpkg.com/purescript-spago/-/purescript-spago-0.6.0.tgz#0b2b69098e4a1b45bdb409090e8b395af05303e9"
+  integrity sha512-mvCu7oXn5R2u/24LP9yj2nQmGQIMqA1ATu0+sl0S2NxsUn8XSHPzjaSZ0hrGt4qG9cAOfadlH4W0Vn0BvZX/Vg==
+
+purescript@^0.12.1:
+  version "0.12.1"
+  resolved "https://registry.yarnpkg.com/purescript/-/purescript-0.12.1.tgz#4f1d8e73a4f438216f156db29ca8fd010907540c"
+  integrity sha512-BdKS77/frDmy86PC0F8DnJ/hDobQGzXcJzq0hz0RpCSfvhBw4RMerBvhkpfTT/fn3NO7fHEl2AB4JMMfSkAjow==
   dependencies:
     install-purescript-cli "^0.4.0 || ^0.3.0"
 
