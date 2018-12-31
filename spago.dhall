@@ -11,6 +11,7 @@
     , "react-basic"
     , "prelude"
     , "strings"
+    , "debug"
     ]
 , packages =
     ./packages.dhall
