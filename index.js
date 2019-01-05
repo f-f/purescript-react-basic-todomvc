@@ -3,16 +3,15 @@ import ReactDOM from 'react-dom';
 
 import createReactClass from 'create-react-class';
 React.createClass = createReactClass;
-var Main = require('./output/Todo.Main');
+var App = require('./output/Todo.App');
 
 function main() {
   const myComponent = (
-    <Main.app/>
+      <App.app/>
   );
 
   ReactDOM.render(myComponent, document.getElementById('app'));
 }
-
 
 // HMR stuff
 // For more info see: https://parceljs.org/hmr.html
@@ -25,4 +24,3 @@ if (module.hot) {
 
 console.log('Starting app');
 main();
-

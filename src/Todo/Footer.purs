@@ -5,7 +5,6 @@ import Prelude
 import Data.Array as Array
 import Data.Generic.Rep (class Generic)
 import Data.Generic.Rep.Show (genericShow)
-import Effect (Effect)
 import React.Basic (JSX)
 import React.Basic as React
 import React.Basic.DOM as DOM
@@ -33,12 +32,15 @@ instance writeVisibility :: WriteForeign Visibility where
 
 type Props =
   { tasks            :: Array Task
-  , onClearCompleted :: Effect Unit
+  , onClearCompleted :: Events.EventHandler
   , visibility       :: Visibility
   }
 
 component :: React.Component Props
-component = React.stateless { displayName: "Footer", render }
+component = React.createComponent "Footer"
+
+footer :: Props -> JSX
+footer = React.makeStateless component render
 
 render :: Props -> JSX
 render props =
@@ -67,7 +69,7 @@ render props =
           , DOM.button
               { className: "clear-completed"
               , hidden: tasksCompleted == 0
-              , onClick: Events.handler_ props.onClearCompleted
+              , onClick: props.onClearCompleted
               , children: [ DOM.text "Clear completed" ]
               }
           ]

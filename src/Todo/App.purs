@@ -1,4 +1,4 @@
-module Todo.Main where
+module Todo.App where
 
 import Prelude
 
@@ -8,10 +8,10 @@ import Data.String as String
 import Effect (Effect)
 import Effect.Uncurried (EffectFn1, runEffectFn1)
 import LocalStorage as LocalStorage
-import React.Basic (JSX)
+import React.Basic (JSX, capture_, StateUpdate(..), capture, monitor, Self)
 import React.Basic as React
 import React.Basic.DOM as DOM
-import React.Basic.DOM.Events (key, preventDefault, targetChecked, targetValue)
+import React.Basic.DOM.Events ( key, targetChecked, targetValue)
 import React.Basic.Events as Events
 import Todo.Footer (Visibility(..))
 import Todo.Footer as Footer
@@ -53,127 +53,186 @@ localStorageKey = "todomvc-purescript-state"
 saveState :: State -> Effect Unit
 saveState state = LocalStorage.setItem localStorageKey state
 
-app :: React.Component Props
-app = React.component
-  { displayName: "App"
-  , initialState
-  -- Here we inject a modified `setState` that persists the state to LocalStorage
-  -- after every modification
-  , receiveProps: \a -> receiveProps $ a { setState = \f -> a.setStateThen f saveState }
-  , render:       \a -> render $ a { setState = \f -> a.setStateThen f saveState }
-  }
+data Action
+  = EditNewTodo (Maybe String)
+  | SubmitNewTodo String
+  | TaskCheck Int
+  | TaskUpdate Int String
+  | TaskDelete Int
+  | ClearCompleted
+  | CheckAllTasks (Maybe Boolean)
+  | UpdateVisibility Visibility
+  | LoadState State
+  | Noop
+
+component :: React.Component Props
+component = React.createComponent "App"
+
+app :: JSX
+app = React.make component
+  { initialState
+  , didMount
+  , render
+  , update
+  , didUpdate
+  } {}
   where
     -- This is the only place we can run stuff only at the first mount
-    receiveProps { state, setState, isFirstMount } = when isFirstMount do
+    didMount self@{ state } = do
+      let setVisibility visibility =
+            React.send self (UpdateVisibility visibility)
       -- On first mount, we start the navigation:
       -- we have something super simple here, in which we match on
       -- the hash string and execute a side effect.
       -- For something fancier we might want to use a parser.
       let matchRoutes hash = case hash of
-            "#/"          -> setState _ { visibility = All }
-            "#/active"    -> setState _ { visibility = Active }
-            "#/completed" -> setState _ { visibility = Completed }
+            "#/"          -> setVisibility All
+            "#/active"    -> setVisibility Active
+            "#/completed" -> setVisibility Completed
             otherwise     -> pure unit
       runEffectFn1 startNavigation matchRoutes
 
       -- Then we try to read if we had some state persisted in LocalStorage
       -- If yes, we overwrite the state with it
       persisted <- LocalStorage.getItem localStorageKey
-      setState \_ -> case persisted of
-        Just (oldState :: State) -> oldState
-        _                        -> state
+      case persisted of
+        Just (oldState :: State) -> React.send self (LoadState oldState)
+        _ -> pure unit
+
+    didUpdate self _ = do
+      -- Here we persist the state to LocalStorage
+      -- called after every update call that resulted in a state change.
+      saveState self.state
+
+    update self action =
+      case action of
+        EditNewTodo val ->
+          Update self.state { newTodo = fromMaybe "" val}
+
+        SubmitNewTodo description ->
+          let
+            newTodo =
+              { description: description
+              , id: self.state.uid
+              , completed: false
+              }
+          in
+           Update self.state
+             { newTodo = ""
+             , tasks = Array.cons newTodo self.state.tasks
+             , uid = self.state.uid + 1
+             }
+
+        TaskCheck id ->
+          let
+            negateCheck task =
+              if task.id == id
+              then task { completed = not task.completed }
+              else task
+          in
+           Update self.state { tasks = map negateCheck self.state.tasks }
+
+        TaskUpdate id newDescription ->
+          let
+            updateTask task =
+              if task.id == id
+              then task { description = newDescription }
+              else task
+          in
+           Update self.state { tasks = map updateTask self.state.tasks }
+
+        TaskDelete id ->
+          let
+            tasks' = Array.filter ((/=) id <<< _.id) self.state.tasks
+          in
+           Update self.state { tasks = tasks' }
+
+        ClearCompleted ->
+          let
+            tasks' = Array.filter (not _.completed) self.state.tasks
+          in
+           Update self.state { tasks = tasks' }
+
+        CheckAllTasks targetChecked ->
+          let
+            toggle task = task { completed = fromMaybe task.completed targetChecked }
+            tasks' = map toggle self.state.tasks
+          in
+           Update self.state { tasks = tasks' }
+
+        UpdateVisibility vis ->
+          Update self.state { visibility = vis }
+
+        LoadState loadedState ->
+          Update loadedState
+
+        Noop ->
+          NoUpdate
 
 -- | Pure render function
-render :: forall r. { state :: State, setState :: SetState | r } -> JSX
-render { state, setState } =
+render :: Self Props State Action -> JSX
+render self =
   classy DOM.div "todomvc-wrapper"
     [ classy DOM.section "todoapp"
-      [ taskEntry state.newTodo onEditNewTodo onSubmitNewTodo
+      [ taskEntry self.state.newTodo onEditNewTodo onKeyDown
       , taskList
-          { tasks: state.tasks
-          , visibility: state.visibility
+          { tasks: self.state.tasks
+          , visibility: self.state.visibility
           , onCheck: onTaskCheck
           , onDelete: onTaskDelete
           , onCommit: onTaskUpdate
           , checkAllTasks
           }
-      , React.element
-          Footer.component
-            { tasks: state.tasks
+      , Footer.footer
+            { tasks: self.state.tasks
             , onClearCompleted: clearCompleted
-            , visibility: state.visibility
+            , visibility: self.state.visibility
             }
       ]
     ]
   where
     -- | Handler for editing the newTodo field
     onEditNewTodo =
-      Events.handler
-        (preventDefault >>> Events.merge { targetValue })
-        \{ targetValue } -> setState _ { newTodo = fromMaybe "" targetValue }
+      capture self targetValue EditNewTodo
 
     -- | Handler for submitting a new task after pressing enter
-    onSubmitNewTodo =
-      Events.handler
-        -- Events.merge lets us run two events in parallel
-        -- (in this case they are both pure)
-        -- and returns a record with their values
-        (Events.merge { targetValue, key })
-        \{ targetValue, key } -> case key of
-          Just "Enter" | not (String.null newDescription) -> do
-            _ <- pure preventDefault
-            setState _ { newTodo = ""
-                       , tasks = Array.cons newTodo state.tasks
-                       , uid = state.uid + 1
-                       }
-          _ -> pure unit
+    onKeyDown =
+      monitor self key
+        \key ->
+          case key of
+            Just "Enter" | hasNewDescription -> SubmitNewTodo newDescription
+            _                                -> Noop
             where
-              newDescription = String.trim state.newTodo
+              newDescription = String.trim self.state.newTodo
+              hasNewDescription = not (String.null newDescription)
 
-              newTodo =
-                { description: newDescription
-                , id: state.uid
-                , completed: false
-                }
 
     -- | Action to apply when a task gets checked:
     --   we go through the tasks and mark that one as completed
     onTaskCheck id =
-      setState _ { tasks = map negateCheck state.tasks }
-      where
-        negateCheck task =
-          if task.id == id then task { completed = not task.completed } else task
+      React.send self (TaskCheck id)
 
     -- | Action to apply when a task has been edited:
     --   we go through the tasks and edit the description of it with the new value
     onTaskUpdate id newDescription =
-      setState _ { tasks = map updateTask state.tasks }
-      where
-        updateTask task =
-          if task.id == id
-          then task { description = newDescription }
-          else task
+      React.send self (TaskUpdate id newDescription)
 
     -- | Action to apply when deleting a task:
     --   we go through the list and remove the one with the same `id`
     onTaskDelete id =
-      setState _ { tasks = Array.filter ((/=) id <<< _.id) state.tasks }
+      React.send self (TaskDelete id)
 
     -- | Action to remove all completed tasks: filter the list by active ones
-    clearCompleted = setState _ { tasks = Array.filter (not _.completed) state.tasks }
+    clearCompleted =
+      capture_ self ClearCompleted
 
     -- | Handler to check all tasks that are not completed
     checkAllTasks =
-      Events.handler
-        targetChecked
-        \targetChecked -> do
-          let toggle task = task { completed = fromMaybe task.completed targetChecked }
-          setState _ { tasks = (map toggle state.tasks) }
-
+      monitor self targetChecked CheckAllTasks
 
 -- | View for the newTodo input
 taskEntry :: String -> Events.EventHandler -> Events.EventHandler -> JSX
-taskEntry value onEdit onSubmit =
+taskEntry value onEdit onKeyDown =
   classy DOM.header "header"
     [ DOM.h1_ [ DOM.text "todos" ]
     , DOM.input attributes
@@ -186,7 +245,7 @@ taskEntry value onEdit onSubmit =
       , value: value
       , name: "newTodo"
       , onChange: onEdit
-      , onKeyDown: onSubmit
+      , onKeyDown: onKeyDown
       }
 
 type TaskListProps =
@@ -227,8 +286,7 @@ taskList { tasks, visibility, onCheck, onDelete, onCommit, checkAllTasks } =
 
     -- | Wrapper around creating a new Task component for every task
     taskView task =
-      React.element
-        Task.component
+      Task.component
           { key: task.id
           , task: task
           , onCheck: onCheck task.id
