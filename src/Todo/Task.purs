@@ -6,7 +6,7 @@ import Data.Maybe (Maybe(..), fromMaybe, isJust)
 import Data.Monoid (guard)
 import Data.String as String
 import Effect (Effect)
-import React.Basic (JSX)
+import React.Basic (JSX, StateUpdate(..))
 import React.Basic as React
 import React.Basic.DOM as DOM
 import React.Basic.DOM.Events (key, targetValue)
@@ -35,24 +35,63 @@ type Props =
   , onCommit :: String -> Effect Unit
   }
 
+data Action
+  = Focus
+  | Change (Maybe String)
+  | KeyDown (Maybe String)
+  | Commit
+
 type SetState = (State -> State) -> Effect Unit
 
 -- | We start in a "non editing" state
 initialState :: State
 initialState = { edits: Nothing }
 
-component :: React.Component Props
-component = React.component
-    { displayName: "Task"
-    , render
-    , initialState
-    , receiveProps
-    }
-    where
-      receiveProps _ = pure unit
+taskComponent :: React.Component Props
+taskComponent = React.createComponent "Task"
 
-render :: forall r. { state :: State, setState :: SetState, props :: Props | r } -> JSX
-render { state, setState, props } =
+component :: Props -> JSX
+component props = React.make taskComponent
+    { render
+    , initialState
+    , update
+    } props
+    where
+
+      update self action =
+        case action of
+          Focus ->
+            Update $ self.state { edits =  Just self.props.task.description }
+
+          Change value ->
+            Update (self.state { edits = value })
+
+          KeyDown key ->
+            case key of
+              Just "Escape" -> Update $ self.state { edits = Nothing }
+              Just "Enter"  -> commit
+              _             -> NoUpdate
+
+          Commit ->
+            commit
+
+        where
+          newDescription :: String
+          newDescription = String.trim $ fromMaybe "" self.state.edits
+
+          commit :: StateUpdate Props State Action
+          commit =
+            case newDescription of
+              "" ->
+                NoUpdate
+              _ ->
+                let
+                  state' = self.state { edits = Nothing }
+                in
+                 UpdateAndSideEffects state' (const $ self.props.onCommit newDescription)
+
+render :: React.Self Props State Action -> JSX
+render self@{state, props}  =
   let
     classNames = String.joinWith " "
                    [ guard (isJust state.edits) "editing"
@@ -64,34 +103,20 @@ render { state, setState, props } =
     description = fromMaybe props.task.description state.edits
 
     -- | Action to set the field in edit mode when focused
-    onFocus = setState _ { edits = Just props.task.description }
+    onFocus = React.capture_ self Focus
 
     -- | Action to commit our changes to the parent component once we're done editing
-    commit = case newDescription of
-      "" -> pure unit
-      _ -> do
-        setState _ { edits = Nothing }
-        props.onCommit newDescription
-      where
-        newDescription = String.trim $ fromMaybe "" state.edits
+    commit =
+      React.capture_ self Commit
 
     -- | Handler to update the input field
     onChange =
-      Events.handler
-        (Events.merge { targetValue })
-        \{ targetValue } -> setState _ { edits = targetValue }
+      React.capture self targetValue Change
 
     -- | Handler for special casing some keys that might be inserted:
     --   on Enter commit the changes, on Esc discard them
     --   (otherwise, type normally)
-    onKeyDown =
-      Events.handler
-        (Events.merge { targetValue, key })
-        \{ targetValue, key } -> case key of
-          Just "Escape" -> setState _ { edits = Nothing }
-          Just "Enter"  -> commit
-          _             -> pure unit
-
+    onKeyDown = React.monitor self key KeyDown
   in
     DOM.li
       { className: classNames
@@ -104,7 +129,7 @@ render { state, setState, props } =
                   , onChange: Events.handler_ props.onCheck
                   }
               , DOM.label
-                  { onDoubleClick: Events.handler_ onFocus
+                  { onDoubleClick: onFocus
                   , children: [ DOM.text description ]
                   }
               , DOM.button
@@ -117,7 +142,7 @@ render { state, setState, props } =
               , value: description
               , name: "title"
               , onChange
-              , onBlur: Events.handler_ commit
+              , onBlur: commit
               , onKeyDown
               }
           ]

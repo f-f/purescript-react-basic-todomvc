@@ -118,9 +118,9 @@ let overrides =
       { react-basic =
             upstream.react-basic
           ⫽ { repo =
-                "https://github.com/KSF-Media/purescript-react-basic.git"
+                "https://github.com/joelmccracken/purescript-react-basic.git"
             , version =
-                "f-f/more-events"
+                "additional-events"
             }
       }
 
