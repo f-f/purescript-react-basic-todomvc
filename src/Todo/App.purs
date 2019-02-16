@@ -68,8 +68,10 @@ data Action
 component :: React.Component Props
 component = React.createComponent "App"
 
-app :: JSX
-app = React.make component
+type AppProps = {}
+
+app :: AppProps -> JSX
+app _ = React.make component
   { initialState
   , didMount
   , render
