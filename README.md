@@ -13,7 +13,7 @@ You can see this deployed [here at `purescript-react-basic-todomvc.netlify.com`]
   The list of tasks is kept in this component's `State`, together with some more things (e.g. the current selector, etc.)
 - The above component then creates a [`Task` component](https://github.com/f-f/purescript-react-basic-todomvc/blob/master/src/Todo/Task.purs) for every task.
   The only state we need to keep in it is the current edits for a focused `Task`.
-- Some things are achieved with a thin layer of JS FFI: [LocalStorage](https://github.com/f-f/purescript-react-basic-todomvc/blob/master/src/LocalStorage.js) and [routing](https://github.com/f-f/purescript-react-basic-todomvc/blob/master/src/Todo/Main.js)
+- Some things are achieved with a thin layer of JS FFI: [LocalStorage](https://github.com/f-f/purescript-react-basic-todomvc/blob/master/src/LocalStorage.js) and [routing](https://github.com/f-f/purescript-react-basic-todomvc/blob/master/src/Todo/App.js)
 
 ## Development
 
