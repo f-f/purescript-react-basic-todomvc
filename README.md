@@ -2,6 +2,8 @@
 
 An implementation of [TodoMVC](http://todomvc.com/) in [PureScript](http://www.purescript.org/) using the [`react-basic`](https://github.com/lumihq/purescript-react-basic) library.
 
+You can see this deployed [here at `purescript-react-basic-todomvc.netlify.com`](https://purescript-react-basic-todomvc.netlify.com/)
+
 ## Project structure
 
 - Entry point for the app is [`index.js`](https://github.com/f-f/purescript-react-basic-todomvc/blob/master/index.js),
