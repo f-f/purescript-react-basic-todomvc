@@ -25,8 +25,13 @@ yarn install
 yarn build
 
 ## Start the dev server with hot reload and stuff
-## (that is, if you use `purs ide` that recompiles your stuff on save)
-## Note that hot-reload won't work if you change any FFI file,
-## so you'll have to `yarn build` again
+##
+## Note: Parcel has hot reload on JS files only, so if you'd like to reload
+## when changing PureScript files, you have two options:
+## - use an editor integration - this will run `purs ide` and recompile the files you edit
+## - run `spago build --watch` in another terminal
+##
+## Note: the hot reload won't work if you change any FFI file,
+## so you'll have to `yarn build` again in this case.
 yarn start
 ```
