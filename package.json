@@ -2,7 +2,7 @@
   "name": "purescript-react-basic-todomvc",
   "version": "1.0.0",
   "description": "TodoMVC with purescript-react-basic",
-  "main": "index.js",
+  "main": "index.html",
   "repository": "https://github.com/f-f/purescript-react-basic-todomvc",
   "author": "Fabrizio Ferrai <fabrizio.ferrai@gmail.com>",
   "license": "MIT",
