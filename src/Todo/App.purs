@@ -8,10 +8,10 @@ import Data.String as String
 import Effect (Effect)
 import Effect.Uncurried (EffectFn1, runEffectFn1)
 import LocalStorage as LocalStorage
-import React.Basic (JSX, capture_, StateUpdate(..), capture, monitor, Self)
+import React.Basic (JSX, StateUpdate(..), Self, runUpdate)
 import React.Basic as React
 import React.Basic.DOM as DOM
-import React.Basic.DOM.Events ( key, targetChecked, targetValue)
+import React.Basic.DOM.Events as DOM.Events
 import React.Basic.Events as Events
 import Todo.Footer (Visibility(..))
 import Todo.Footer as Footer
@@ -75,14 +75,15 @@ app _ = React.make component
   { initialState
   , didMount
   , render
-  , update
   , didUpdate
   } {}
   where
+    send = runUpdate update
+
     -- This is the only place we can run stuff only at the first mount
     didMount self@{ state } = do
       let setVisibility visibility =
-            React.send self (UpdateVisibility visibility)
+            send self (UpdateVisibility visibility)
       -- On first mount, we start the navigation:
       -- we have something super simple here, in which we match on
       -- the hash string and execute a side effect.
@@ -98,7 +99,7 @@ app _ = React.make component
       -- If yes, we overwrite the state with it
       persisted <- LocalStorage.getItem localStorageKey
       case persisted of
-        Just (oldState :: State) -> React.send self (LoadState oldState)
+        Just (oldState :: State) -> send self (LoadState oldState)
         _ -> pure unit
 
     didUpdate self _ = do
@@ -171,66 +172,66 @@ app _ = React.make component
         Noop ->
           NoUpdate
 
--- | Pure render function
-render :: Self Props State Action -> JSX
-render self =
-  classy DOM.div "todomvc-wrapper"
-    [ classy DOM.section "todoapp"
-      [ taskEntry self.state.newTodo onEditNewTodo onKeyDown
-      , taskList
-          { tasks: self.state.tasks
-          , visibility: self.state.visibility
-          , onCheck: onTaskCheck
-          , onDelete: onTaskDelete
-          , onCommit: onTaskUpdate
-          , checkAllTasks
-          }
-      , Footer.footer
-            { tasks: self.state.tasks
-            , onClearCompleted: clearCompleted
-            , visibility: self.state.visibility
-            }
-      ]
-    ]
-  where
-    -- | Handler for editing the newTodo field
-    onEditNewTodo =
-      capture self targetValue EditNewTodo
+    -- | Pure render function
+    render :: Self Props State -> JSX
+    render self =
+      classy DOM.div "todomvc-wrapper"
+        [ classy DOM.section "todoapp"
+          [ taskEntry self.state.newTodo onEditNewTodo onKeyDown
+          , taskList
+              { tasks: self.state.tasks
+              , visibility: self.state.visibility
+              , onCheck: onTaskCheck
+              , onDelete: onTaskDelete
+              , onCommit: onTaskUpdate
+              , checkAllTasks
+              }
+          , Footer.footer
+                { tasks: self.state.tasks
+                , onClearCompleted: clearCompleted
+                , visibility: self.state.visibility
+                }
+          ]
+        ]
+      where
+        -- | Handler for editing the newTodo field
+        onEditNewTodo =
+          DOM.Events.capture DOM.Events.targetValue (send self <<< EditNewTodo)
 
-    -- | Handler for submitting a new task after pressing enter
-    onKeyDown =
-      monitor self key
-        \key ->
-          case key of
-            Just "Enter" | hasNewDescription -> SubmitNewTodo newDescription
-            _                                -> Noop
-            where
-              newDescription = String.trim self.state.newTodo
-              hasNewDescription = not (String.null newDescription)
+        -- | Handler for submitting a new task after pressing enter
+        onKeyDown =
+          Events.handler DOM.Events.key
+            \key -> send self $
+              case key of
+                Just "Enter" | hasNewDescription -> SubmitNewTodo newDescription
+                _                                -> Noop
+                where
+                  newDescription = String.trim self.state.newTodo
+                  hasNewDescription = not (String.null newDescription)
 
 
-    -- | Action to apply when a task gets checked:
-    --   we go through the tasks and mark that one as completed
-    onTaskCheck id =
-      React.send self (TaskCheck id)
+        -- | Action to apply when a task gets checked:
+        --   we go through the tasks and mark that one as completed
+        onTaskCheck id =
+          send self (TaskCheck id)
 
-    -- | Action to apply when a task has been edited:
-    --   we go through the tasks and edit the description of it with the new value
-    onTaskUpdate id newDescription =
-      React.send self (TaskUpdate id newDescription)
+        -- | Action to apply when a task has been edited:
+        --   we go through the tasks and edit the description of it with the new value
+        onTaskUpdate id newDescription =
+          send self (TaskUpdate id newDescription)
 
-    -- | Action to apply when deleting a task:
-    --   we go through the list and remove the one with the same `id`
-    onTaskDelete id =
-      React.send self (TaskDelete id)
+        -- | Action to apply when deleting a task:
+        --   we go through the list and remove the one with the same `id`
+        onTaskDelete id =
+          send self (TaskDelete id)
 
-    -- | Action to remove all completed tasks: filter the list by active ones
-    clearCompleted =
-      capture_ self ClearCompleted
+        -- | Action to remove all completed tasks: filter the list by active ones
+        clearCompleted =
+          DOM.Events.capture_ (send self ClearCompleted)
 
-    -- | Handler to check all tasks that are not completed
-    checkAllTasks =
-      monitor self targetChecked CheckAllTasks
+        -- | Handler to check all tasks that are not completed
+        checkAllTasks =
+          Events.handler DOM.Events.targetChecked (send self <<< CheckAllTasks)
 
 -- | View for the newTodo input
 taskEntry :: String -> Events.EventHandler -> Events.EventHandler -> JSX
@@ -243,7 +244,7 @@ taskEntry value onEdit onKeyDown =
     attributes =
       { className: "new-todo"
       , placeholder: "What needs to be done?"
-      , autoFocus: "true"
+      , autoFocus: true
       , value: value
       , name: "newTodo"
       , onChange: onEdit

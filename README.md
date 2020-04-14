@@ -19,10 +19,10 @@ You can see this deployed [here at `purescript-react-basic-todomvc.netlify.com`]
 
 ```bash
 ## Install npm dependencies, PureScript compiler, etc
-yarn install
+npm install
 
 ## Build the PureScript project
-yarn build
+npm run build
 
 ## Start the dev server with hot reload and stuff
 ##
@@ -33,5 +33,5 @@ yarn build
 ##
 ## Note: the hot reload won't work if you change any FFI file,
 ## so you'll have to `yarn build` again in this case.
-yarn start
+npm start
 ```
