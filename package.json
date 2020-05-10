@@ -2,25 +2,27 @@
   "name": "purescript-react-basic-todomvc",
   "version": "1.0.0",
   "description": "TodoMVC with purescript-react-basic",
-  "main": "index.html",
+  "main": "dist/index.html",
   "repository": "https://github.com/f-f/purescript-react-basic-todomvc",
   "author": "Fabrizio Ferrai <fabrizio.ferrai@gmail.com>",
   "license": "MIT",
-  "devDependencies": {
+  "dependencies": {
     "create-react-class": "^15.6.3",
-    "parcel": "2.0.0-alpha.3.1",
-    "purescript": "^0.13.6",
-    "spago": "^0.14.0",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",
     "todomvc-app-css": "^2.1.2",
     "todomvc-common": "^1.0.5"
   },
+  "devDependencies": {
+    "parcel": "^2.0.0-nightly.259",
+    "purescript": "^0.13.6",
+    "spago": "^0.15.2"
+  },
   "scripts": {
-    "start": "parcel index.html",
+    "start": "npm run build && parcel index.html",
     "test": "echo \"Error: no test specified\" && exit 1",
     "install": "spago install",
-    "build-production": "spago build && parcel build index.html",
+    "build-production": "npm run build && parcel build index.html",
     "build": "spago build",
     "clean": "rm -rf .cache .spago .psci_modules node_modules output dist"
   }
