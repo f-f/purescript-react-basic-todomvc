@@ -23,7 +23,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "install": "spago install",
     "build-production": "npm run build && parcel build index.html",
-    "build": "spago build",
-    "clean": "rm -rf .cache .spago .psci_modules node_modules output dist"
+    "build": "spago build --purs-args '--codegen js,corefn' && zephyr Todo.App.app --dce-foreign",
+    "clean": "rm -rf .cache .spago .psci_modules node_modules output dce-output dist"
   }
 }
