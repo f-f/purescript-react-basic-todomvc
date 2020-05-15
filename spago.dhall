@@ -1,4 +1,4 @@
-{ sources = [ "src/**/*.purs", "test/**/*.purs" ]
+{ sources = [ "src/**/*.purs" ]
 , name = "purescript-react-basic-todomvc"
 , dependencies =
   [ "effect"
