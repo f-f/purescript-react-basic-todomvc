@@ -4,4 +4,5 @@ node_modules/*
 .cache/*
 .spago/*
 output/*
+dce-output/*
 dist/*
