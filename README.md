@@ -17,6 +17,8 @@ You can see this deployed [here at `purescript-react-basic-todomvc.netlify.com`]
 
 ## Development
 
+Download [zephyr](https://github.com/coot/zephyr/releases).
+
 ```bash
 ## Install npm dependencies, PureScript compiler, etc
 npm install

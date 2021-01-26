@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 
 import createReactClass from 'create-react-class';
 React.createClass = createReactClass;
-var App = require('./output/Todo.App');
+var App = require('./dce-output/Todo.App');
 
 function main() {
   const myComponent = (
