@@ -19,11 +19,13 @@
     "spago": "^0.15.2"
   },
   "scripts": {
-    "start": "npm run build && parcel index.html",
+    "start": "npm run build-production && parcel index.html",
     "test": "echo \"Error: no test specified\" && exit 1",
     "install": "spago install",
-    "build-production": "npm run build && parcel build index.html",
-    "build": "spago build",
-    "clean": "rm -rf .cache .spago .psci_modules node_modules output dist"
+    "build": "spago build --purs-args '--codegen corefn'",
+    "bundle:dce": "zephyr -fe Todo.App.app",
+    "bundle": "parcel build index.html",
+    "build-production": "npm run build && npm run bundle:dce && npm run bundle",
+    "clean": "rm -rf .cache .spago .psci_modules node_modules output dce-output dist"
   }
 }
