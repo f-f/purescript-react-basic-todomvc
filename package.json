@@ -14,7 +14,7 @@
     "todomvc-common": "^1.0.5"
   },
   "devDependencies": {
-    "parcel": "^2.0.0-nightly.259",
+    "parcel": "^2.8.2",
     "purescript": "^0.13.6",
     "spago": "^0.15.2"
   },
